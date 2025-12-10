@@ -28,10 +28,10 @@
   }
   /* MAIN BACKGROUND SLIDESHOW */
 @keyframes changeBG1 {
-    0%   { background-image: url("/home/user/sih_project/66d33b8d7c728c703d7db130-harry-potter-hogwarts-castle-peel.jpg");}
-    33%  { background-image: url("/home/user/Pictures/Screenshots/Screenshot from 2025-12-07 15-43-07.png"); }
-    66%  { background-image: url("/home/user/sih_project/66d33b8d7c728c703d7db130-harry-potter-hogwarts-castle-peel.jpg"); }
-    100% { background-image: url("/home/user/Pictures/Screenshots/Screenshot from 2025-12-07 15-43-07.png"); }
+    0%   { background-image: url("images/photo1.png");}
+    33%  { background-image: url("images/photo2.jpg"); }
+    66%  { background-image: url("images/photo1.png"); }
+    100% { background-image: url("images/photo2.jpg"); }
 }
 
   .game-wrap{
@@ -46,13 +46,12 @@
     box-shadow: 0px 0px 15px black;
     align-items:start;
   }
-
   /* SIDEBAR */
   .sidebar{
     padding:14px;
     border-radius:10px;
     background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.02));
-    color:#0b0b0b;
+    color:black;
   }
   .title{font-size:20px;margin:0 0 8px 0}
   .players{display:flex;gap:8px;align-items:center;margin-bottom:12px}
@@ -168,6 +167,28 @@
   }
   @media (max-width:520px){
     .board{ grid-template-columns: repeat(3, 1fr); gap:10px; }
+  }
+  @media (prefers-color-scheme:dark){
+    body{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    animation: changeBG1 15s infinite;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    font:white;
+  }
+  /* MAIN BACKGROUND SLIDESHOW */
+@keyframes changeBG1 {
+    0%   { background-image: url("images/photo3.jpeg");}
+    33%  { background-image: url("images/photo4.jpg"); }
+    66%  { background-image: url("images/photo3.jpeg"); }
+    100% { background-image: url("images/photo4.jpg"); }
+}
+ .sidebar{
+   color:white;
   }
 </style>
 </head>
