@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Flip & Match — Emoji Game</title>
+<style>
+  :root{
+    --bg1: #ffd3e0;
+    --bg2: #ffe9b5;
+    --card-back: rgba(255,255,255,0.18);
+    --glass: rgba(255,255,255,0.12);
+    --player1: #ff6b6b; /* red */
+    --player2: #4d9cff; /* blue */
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial}
+  body{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    animation: changeBG1 15s infinite;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+   
+  }
+  /* MAIN BACKGROUND SLIDESHOW */
+@keyframes changeBG1 {
+    0%   { background-image: url("/home/user/sih_project/66d33b8d7c728c703d7db130-harry-potter-hogwarts-castle-peel.jpg");}
+    33%  { background-image: url("/home/user/Pictures/Screenshots/Screenshot from 2025-12-07 15-43-07.png"); }
+    66%  { background-image: url("/home/user/sih_project/66d33b8d7c728c703d7db130-harry-potter-hogwarts-castle-peel.jpg"); }
+    100% { background-image: url("/home/user/Pictures/Screenshots/Screenshot from 2025-12-07 15-43-07.png"); }
+}
+
+  .game-wrap{
+    width:980px;
+    max-width:100%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+    border-radius:14px;
+    padding:18px;
+    display:grid;
+    grid-template-columns: 260px 1fr;
+    gap:18px;
+    box-shadow: 0px 0px 15px black;
+    align-items:start;
+  }
+
+  /* SIDEBAR */
+  .sidebar{
+    padding:14px;
+    border-radius:10px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.02));
+    color:#0b0b0b;
+  }
+  .title{font-size:20px;margin:0 0 8px 0}
+  .players{display:flex;gap:8px;align-items:center;margin-bottom:12px}
+  .chip{width:36px;height:36px;border-radius:8px;display:inline-block}
+  .score{margin:6px 0;font-weight:600}
+  .turn-indicator{margin-top:8px;padding:8px;border-radius:8px;background:var(--glass);font-weight:600}
+
+  /* BOARD */
+  .board-wrap{width:100%}
+  .board{
+    display:grid;
+    gap:12px;
+    grid-template-columns: repeat(6, 1fr); /* 6 columns x 4 rows = 24 */
+    justify-items:stretch;
+     box-shadow: 0px 0px 15px black;
+  }
+
+  /* CARD */
+  .card{
+    width:100%;
+    aspect-ratio: 1 / 1;
+    perspective:900px;
+  }
+  .cardInner{
+    position:relative;
+    width:100%;
+    height:100%;
+    border-radius:12px;
+    transform-style:preserve-3d;
+    transition: transform 0.55s cubic-bezier(.2,.9,.3,1);
+    cursor:pointer;
+    border:2px solid black;
+    box-shadow: 0 6px 18px rgba(13,13,13,0.12);
+    background:var(--card-back);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    user-select:none;
+  }
+  .cardInner.flipped{ transform: rotateY(180deg); }
+  .cardFace{
+    position:absolute;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:12px;
+    backface-visibility:hidden;
+    -webkit-backface-visibility:hidden;
+  }
+  .faceFront{
+    background:linear-gradient(180deg, rgba(255,255,255,0.06), rgba(0,0,0,0.02));
+    font-size:26px;
+    color:#fff;
+  }
+  .faceBack{
+    transform: rotateY(180deg);
+    background: #fff;
+    font-size:46px;
+  }
+
+  /* matched style */
+  .cardInner.matched{
+    transform: none !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    cursor:default;
+  }
+  .disabled{
+    pointer-events:none;
+    opacity:0.98;
+  }
+
+  /* final modal */
+  .modal{
+    position:fixed;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:rgba(0,0,0,0.36);
+    z-index:40;
+    visibility:hidden;
+    opacity:0;
+    transition:opacity .2s, visibility .2s;
+  }
+  .modal.show{ visibility:visible; opacity:1; }
+  .modalCard{
+    background:white;
+    color:#111;
+    padding:28px 32px;
+    border-radius:14px;
+    text-align:center;
+    box-shadow:0 20px 50px rgba(0,0,0,0.25);
+    min-width:260px;
+  }
+  .modalCard h2{margin:0 0 8px 0}
+  .btn{
+    display:inline-block;
+    padding:10px 16px;
+    border-radius:10px;
+    cursor:pointer;
+    border:none;
+    font-weight:700;
+    margin-top:12px;
+  }
+  .btn.primary{ background: #06b6d4; color:white; }
+  .btn.ghost{ background:transparent; color:#333; border:1px solid #ddd }
+
+  /* responsive */
+  @media (max-width:900px){
+    .game-wrap{ grid-template-columns: 1fr; }
+    .board{ grid-template-columns: repeat(4, 1fr); }
+  }
+  @media (max-width:520px){
+    .board{ grid-template-columns: repeat(3, 1fr); gap:10px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="game-wrap" role="application" aria-label="Emoji flip and match game">
+  <aside class="sidebar" aria-hidden="false">
+    <h1 class="title">Flip & Match — Emojis</h1>
+
+    <div class="players">
+      <div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <div class="chip" style="background:var(--player1)"></div>
+          <div><strong>Player 1</strong></div>
+        </div>
+        <div class="score" id="score1">Score: 0</div>
+      </div>
+    </div>
+
+    <div class="players" style="margin-top:6px">
+      <div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <div class="chip" style="background:var(--player2)"></div>
+          <div><strong>Player 2</strong></div>
+        </div>
+        <div class="score" id="score2">Score: 0</div>
+      </div>
+    </div>
+
+    <div class="turn-indicator" id="turnIndicator">Turn: Player 1</div>
+
+    <div style="margin-top:12px;">
+      <button id="resetBtn" class="btn ghost" style="width:100%;">Restart Game</button>
+    </div>
+    <p style="opacity:.85;font-size:13px;margin-top:10px">Match pairs of identical emojis. Matched cards lock and show the player's color.</p>
+  </aside>
+
+  <main class="board-wrap">
+    <div class="board" id="board" aria-live="polite" aria-atomic="true"></div>
+  </main>
+</div>
+
+<!-- modal -->
+<div class="modal" id="modal">
+  <div class="modalCard" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <h2 id="modalTitle">You finished!</h2>
+    <p id="modalMsg" style="margin:6px 0 12px 0;font-weight:600"></p>
+    <div>
+      <button id="playAgain" class="btn primary">Play Again</button>
+      <button id="closeModal" class="btn ghost">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const EMOJIS= [
+  "🧙‍♂️",
+  "😎",
+  "🪄",
+  "✨",
+  "🔮",
+  "📜",
+  "🧪",
+  "🧹",
+  "🦉",
+  "🐉",
+  "🌙",
+  "⚡",
+];
+
+
+  const board = document.getElementById('board');
+  const score1El = document.getElementById('score1');
+  const score2El = document.getElementById('score2');
+  const turnIndicator = document.getElementById('turnIndicator');
+  const modal = document.getElementById('modal');
+  const modalMsg = document.getElementById('modalMsg');
+  const playAgain = document.getElementById('playAgain');
+  const closeModal = document.getElementById('closeModal');
+  const resetBtn = document.getElementById('resetBtn');
+
+  let deck = [];
+  let flipped = [];
+  let lock = false;
+  let playerTurn = 1; // 1 or 2
+  let score1 = 0;
+  let score2 = 0;
+  let matchedPairs = 0;
+
+  function makeDeck(){
+    const arr = EMOJIS.concat(EMOJIS); // duplicate -> 24
+    // Fisher-Yates shuffle
+    for(let i = arr.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  function renderBoard(){
+    board.innerHTML = '';
+    deck = makeDeck();
+    matchedPairs = 0;
+    flipped = [];
+    lock = false;
+    updateTurnUI();
+
+    deck.forEach((val, idx) => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.setAttribute('data-idx', idx);
+      card.setAttribute('data-emoji', val);
+
+      const inner = document.createElement('div');
+      inner.className = 'cardInner';
+      inner.setAttribute('role','button');
+      inner.setAttribute('tabindex','0');
+      inner.setAttribute('aria-label','face down card');
+
+      const front = document.createElement('div');
+      front.className = 'cardFace faceFront';
+      front.textContent = '❓';
+
+      const back = document.createElement('div');
+      back.className = 'cardFace faceBack';
+      back.textContent = val;
+
+      inner.appendChild(front);
+      inner.appendChild(back);
+      card.appendChild(inner);
+
+      // click + keyboard accessibility (Enter/Space)
+      inner.addEventListener('click', () => tryFlip(inner));
+      inner.addEventListener('keydown', (e) => {
+        if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tryFlip(inner); }
+      });
+
+      board.appendChild(card);
+    });
+  }
+
+  function tryFlip(inner){
+    if (lock) return;
+    if (inner.classList.contains('flipped') || inner.classList.contains('matched')) return;
+
+    inner.classList.add('flipped');
+    flipped.push(inner);
+
+    if(flipped.length === 2){
+      lock = true;
+      setTimeout(checkMatch, 650);
+    }
+  }
+
+  function checkMatch(){
+    const [a,b] = flipped;
+    const valA = a.parentElement.getAttribute('data-emoji');
+    const valB = b.parentElement.getAttribute('data-emoji');
+
+    if(valA === valB){
+      // match
+      a.classList.add('matched');
+      b.classList.add('matched');
+
+      // color background with player's color
+      const parentA = a.parentElement;
+      const parentB = b.parentElement;
+      if(playerTurn === 1){
+        parentA.style.background = 'linear-gradient(180deg, var(--player1), #ff9ea0)';
+        parentB.style.background = 'linear-gradient(180deg, var(--player1), #ff9ea0)';
+        score1++; score1El.textContent = 'Score: ' + score1;
+      } else {
+        parentA.style.background = 'linear-gradient(180deg, var(--player2), #80bfff)';
+        parentB.style.background = 'linear-gradient(180deg, var(--player2), #80bfff)';
+        score2++; score2El.textContent = 'Score: ' + score2;
+      }
+
+      // lock matched cards
+      parentA.classList.add('disabled');
+      parentB.classList.add('disabled');
+
+      matchedPairs++;
+      // same player keeps turn on success (common rule). If you want turn to switch change this line.
+      // (currently same player continues)
+    } else {
+      // not matched: flip back & switch turn
+      a.classList.remove('flipped');
+      b.classList.remove('flipped');
+      playerTurn = (playerTurn === 1) ? 2 : 1;
+      updateTurnUI();
+    }
+
+    // cleanup
+    flipped = [];
+    lock = false;
+
+    // game finished?
+    if(matchedPairs === EMOJIS.length){
+      setTimeout(showResult, 450);
+    }
+  }
+
+  function updateTurnUI(){
+    turnIndicator.textContent = 'Turn: Player ' + playerTurn;
+    if(playerTurn === 1){
+      turnIndicator.style.background = 'linear-gradient(90deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))';
+      turnIndicator.style.borderLeft = '6px solid var(--player1)';
+    } else {
+      turnIndicator.style.background = 'linear-gradient(90deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))';
+      turnIndicator.style.borderLeft = '6px solid var(--player2)';
+    }
+  }
+
+  function showResult(){
+    modal.classList.add('show');
+    let msg = '';
+    if(score1 > score2) msg = 'Player 1 wins! 🎉';
+    else if(score2 > score1) msg = 'Player 2 wins! 🎉';
+    else msg = `It's a tie! 🤝`;
+    modalMsg.textContent = msg + ` Final score — P1: ${score1} • P2: ${score2}`;
+  }
+
+  function resetGame(){
+    score1 = 0; score2 = 0; playerTurn = 1;
+    score1El.textContent = 'Score: 0';
+    score2El.textContent = 'Score: 0';
+    renderBoard();
+  }
+
+  // ui events
+  playAgain.addEventListener('click', () => {
+    modal.classList.remove('show');
+    resetGame();
+  });
+  closeModal.addEventListener('click', () => {
+    modal.classList.remove('show');
+  });
+  resetBtn.addEventListener('click', resetGame);
+
+  // init
+  renderBoard();
+})();
+</script>
+</body>
+</html>
+
